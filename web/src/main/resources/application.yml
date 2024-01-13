@@ -1,0 +1,14 @@
+# 서버 설정.
+server:
+  port: 9002
+
+
+# 스프링 설정.
+spring:
+  # Thymeleaf
+  thymeleaf: 
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML5
+    check-template-location: true
+    #cache: false
