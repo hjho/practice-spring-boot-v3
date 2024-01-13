@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:replace="/fragment/common :: header"></th:block>
+	<script type="text/javascript" th:inline="javascript">
+		$(document).ready(function() {
+			console.log('DOCUMENT READY: PAGE START');
+		});
+		
+		const form = {
+			object: function(formId) {
+				const object   = {};
+				const target   = $(formId);
+				const disabled = target.find(':disabled');
+				
+				disabled.attr('disabled', false);
+				
+				// 기본적인 속성 설정.
+				$(target.serializeArray()).each(function(i, data) {
+					let text = '';
+					switch(data.name) {
+						case 'money': 
+						case 'hpno': 
+						case 'datetime':
+							text = decodeURIComponent(data.value).replace(/[^\d]/g, '');
+							break;
+						case 'dollar':
+							text = decodeURIComponent(data.value).replace(/[^\d|.]/g, '');
+							break;
+						default:
+							text = data.value;
+							break;
+					}
+					// 값 설정.
+					object[data.name] = text;
+				});
+				
+				disabled.attr('disabled', true);
+				
+				// 체크박스 미체크 시 값 설정.
+				const checkboxIds = ['checkYn'];
+				$(checkboxIds).each(function(_, boxId) {
+					if(!($('#'+boxId).is(':checked'))) {
+						object[boxId] = 'N';
+					}
+				});
+				
+				// 추가로 변경해야 하는 속성.
+				const list = [];
+				$($('.section')).each(function(_, item) {
+					list.push({
+						haeder: $(item).find('.header').val(),
+						body  : $(item).find('.body').val()
+					});
+				});
+				object['section'] = JSON.stringify(list);
+				
+				return object;
+			},
+			json: function(formId) {
+				return JSON.stringify(this.object(formId));
+			},
+			query: function(formId) {
+				let   params   = '';
+				const target   = $(formId);
+				const disabled = target.find(':disabled');
+				
+				disabled.attr('disabled', false);
+				
+				// 기본적인 속성 설정.
+				const numberIds = ['money', 'hpno', 'datetime'];
+				const floatIds  = ['dollar'];
+				$(target.serialize().split('&')).each(function(i, keyValue) {
+					params += (i === 0) ? '' : '&';
+					 
+					const key   = keyValue.split('=')[0];
+					const value = keyValue.split('=')[1];
+					if(numberIds.includes(key)) {
+						params += key + '=' + decodeURIComponent(value).replace(/[^\d]/g, '');
+							
+					} else if(floatIds.includes(key)) {
+						params += key + '=' + decodeURIComponent(value).replace(/[^\d|.]/g, '');
+						
+					} else {
+						params += keyValue;
+					}
+				});
+				
+				disabled.attr('disabled', true);
+				
+				// 체크박스 미체크 시 값 설정.
+				const checkboxIds = ['checkYn'];
+				$(checkboxIds).each(function(_, boxId) {
+					if(!($('#'+boxId).is(':checked'))) {
+						params += '&' + boxId + '=N';
+					}
+				});
+				
+				return params;
+			}
+		}
+	</script>
+</head>
+<body>
+	<main class="container">
+		<section>
+			<h2>Form Event</h2>
+			<form id="testForm">
+				<div class="grid">
+					<label for="numeng">
+						Number + English
+						<input type="text" id="numeng" name="numeng" placeholder="Num + Eng (8)" onkeyup="evnts.formatNumEng(event, 8);"/>
+					</label>
+					
+					<label for="money">
+						Money
+						<input type="text" id="money" name="money" placeholder="Money (7)" onkeyup="evnts.formatMoney(event, 7);"/>
+					</label>
+					
+					<label for="dollar">
+						Dollar 
+						<input type="text" id="dollar" name="dollar" placeholder="Dollar (7.2)" onkeyup="evnts.formatDollar(event, 7, 2);"/>
+					</label>
+				</div>
+				
+				<div class="grid">
+					<label for="hpno">
+						Hpno 
+						<input type="text" id="hpno" name="hpno" placeholder="Hpno" onkeyup="evnts.formatHpno(event);"/>
+					</label>
+					
+					<label for="datetime">
+						Date Time 
+						<input type="text" id="datetime" name="datetime" placeholder="Date + Time" />
+					</label>
+					
+					<fieldset>
+						<legend>Check Yn</legend>
+						<label for="checkYn">
+							<input type="checkbox" id="checkYn" name="checkYn" value="N" onchange="evnts.formatYn(event);"/>
+							Checkbox
+						</label>
+					</fieldset>
+				</div>
+				
+				<div class="grid">
+					<input type="submit" value="Submit" onclick="call(event);" />
+				</div>
+				
+			</form>
+		</section>
+		
+	</main>
+	
+<th:block th:replace="/fragment/common :: footer"></th:block>
+
+	<script type="text/javascript" th:inline="javascript">
+		$(document).ready(function() {
+			console.log('DOCUMENT READY: PAGE END');
+		});
+		function call(event) {
+			event.preventDefault();
+			console.log('QUERY:', form.query('#testForm'));
+			console.log('');
+			console.log('OBJECT:', form.object('#testForm'));
+		}
+	</script>
+</body>
+
+</html>
